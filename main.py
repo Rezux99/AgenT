@@ -4,18 +4,18 @@ import os
 
 app = FastAPI(title="AgenT")
 
-# Render te dará estas dos variables
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-supabase = None
-if SUPABASE_URL and SUPABASE_KEY:
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 
 @app.get("/")
 def hola():
-    return {"mensaje": "funciona - FastAPI + Supabase listo"}
+    return {"mensaje": "funciona"}
 
-@app.get("/health")
-def health():
-    return {"ok": True, "supabase_conectado": bool(supabase)}
+@app.post("/mensaje")
+def guardar(rol: str, contenido: str):
+    supabase.table("mensajes").insert({"rol": rol, "contenido": contenido}).execute()
+    return {"ok": True}
+
+@app.get("/mensajes")
+def listar():
+    data = supabase.table("mensajes").select("*").order("id", desc=True).limit(20).execute()
+    return data.data
